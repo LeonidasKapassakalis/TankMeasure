@@ -1,0 +1,887 @@
+--SFAIRIKES
+Dim T, SPH, SSPT, SPEB, SPP, SEH, SSET, SEEB, SEP, STXYP, SPHCM, SPVGOV, MWAIT, STXA, STXB, _
+STXTV, PI, STXVA, S1, S2, D2, D1, S, SPVNSV, SPVAIR, SDENS, SPWLV, SPWLA, SEVNSV, PRO_SFTD15, _
+SPWAIR, SPWTA, SPWTV, SPT, SVCF, SEHCM, SET_, SEWTA, SDWA, SEWTV, SDWV, SEVGOV, SEWLV, PRO_SFTVCF, _
+SEWLA, SEVAIR, SEWAIR, SFT_DENS, SFT_PRE, SFTE_DENS, SFTE_PRE, SFT_PRE2, SFT_DENS2, SFTE_DENS2, _
+SFTE_PRE2, PRO2_SFTD15, PRO2_SFTVCF, EPI_SFTD15, EPI2_SFTD15, EPI_SFTVCF, EPI2_SFTVCF, p_dens As Double
+Dim flag_message As Boolean
+ 
+Dim SPROD As String
+Dim sfair As Recordset
+ 
+Option Compare Database
+Option Explicit
+ 
+ 
+ 
+ 
+ 
+'************************* PRWTOKOLLO ********************************
+Public Function Sf_Protok()
+Dim sed As Recordset
+Dim sed2 As Recordset
+ 
+Set sfair = CurrentDb.OpenRecordset("P_sfair")
+ 
+Init_Values
+ 
+SPH = sfair!ypsos_pro
+SSPT = sfair!therm_pro
+SPEB = sfair!eid_b_pro
+SPP = sfair!piesi_pro
+SPROD = sfair!eidos
+ 
+SEH = sfair!ypsos_epi
+SSET = sfair!therm_epi
+SEEB = sfair!eid_b_epi
+SEP = sfair!piesi_epi
+ 
+STXYP = sfair!yp_cm
+STXA = sfair!a_cm
+STXB = sfair!b_cm
+STXTV = sfair!ogkos
+STXVA = sfair!oa_lt
+ 
+SPT = Round(SSPT * 2, 0) / 2
+SET_ = Round(SSET * 2, 0) / 2
+ 
+Prometrisi
+'UPDATE table fields with results
+Set sed = CurrentDb.OpenRecordset("Protokollo_Sfair")
+sed.Edit
+sed!pro_gov_ugr = SPVGOV
+sed!pro_vcf = SVCF
+sed!pro_nsv_ugr = SPVNSV
+sed!pro_aer = SPVAIR
+sed!pro_ugr_vac = SPWLV
+sed!pro_ugr_air = SPWLA
+sed!pro_sunt_aer = SDENS
+sed!pro_b_aer = SPWAIR
+sed!pro_sun_vac = SPWTV
+sed!pro_sun_air = SPWTA
+sed.Update
+sed.Close
+ 
+Epimetrisi
+' UPDATE table fields with results
+Set sed2 = CurrentDb.OpenRecordset("Protokollo_Sfair")
+sed2.Edit
+sed2!epi_gov_ugr = SEVGOV
+sed2!epi_vcf = SVCF
+sed2!epi_nsv_ugr = SEVNSV
+sed2!epi_aer = SEVAIR
+sed2!epi_ugr_vac = SEWLV
+sed2!epi_ugr_air = SEWLA
+sed2!epi_sunt_aer = SDENS
+sed2!epi_b_aer = SEWAIR
+sed2!epi_sun_vac = SEWTV
+sed2!epi_sun_air = SEWTA
+sed2!dia_sun_vac = SDWV
+sed2!dia_sun_air = SDWA
+sed2.Update
+sed2.Close
+ 
+End Function
+ 
+ 
+ 
+ 
+ 
+'************************* APOGRAFH **********************************
+Public Function stock_sf()
+'Dim MASTM, MNHIGH, MTTHME, THERMPER, MEB15, L, MPCREND, MPCRACAP, MCREND, MOGOS, MCRACAP, MOGOS1, _
+'MDIFF, Mflag, MCREND1, MOGKP, MOGY, MOGPO, MOGOS15, VCF, F, MBAPK, TK, TK1, TK2, TEB15, _
+'Dior, A, SG, SGTK, eibar, k0f, k1f, k0j, k1j, k0g, k1g, aint, bint, k0, k1, MEBTK, MTEMP, _
+'MTEMP1, MTEMP2, LT_Fort, XILGR, MEYEPL, MEYEPK, MCOEF, MDHIGH, Katharos_OGKOS As Double
+'Dim dx_value, dy_value, dy_diff As String, CSGTK As Double
+Dim MEB15, MEBTK, MOGOS, MTTHME
+ 
+Set sfair = CurrentDb.OpenRecordset("Dex_Stock_sfair")
+ 
+Do
+'--> Start of deletion by A.Bonas@20060629
+    'If protok!ypsos_pro = 0 Or protok!therm_pro = 0 Or protok!eid_b_pro = 0 Then
+   
+    'protok.MoveNext
+    'If protok.EOF = True Then
+    'Exit Do
+    'End If
+   
+    'End If
+'<-- End of deletion by A.Bonas@20060629
+   
+    Init_Values
+   
+    SPH = sfair!ypsos_pro
+    SSPT = sfair!therm_pro
+    SPEB = sfair!eid_b_pro
+    'SPP = sfair!piesi_pro
+    SPP = DLookup("def_piesi_aeriou", "parameters")
+    SPROD = sfair!eidos
+ 
+    'SEH = sfair!ypsos_epi
+    'SSET = sfair!therm_epi
+    'SEEB = sfair!eid_b_epi
+    'SEP = sfair!piesi_epi
+ 
+    STXYP = sfair!yp_cm
+    STXA = sfair!a_cm
+    STXB = sfair!b_cm
+    STXTV = sfair!ogkos
+    STXVA = sfair!oa_lt
+ 
+    SPT = Round(SSPT * 2, 0) / 2
+    'SET_ = Round(SSET * 2, 0) / 2
+   
+    MTTHME = sfair!therm_pro
+    MEB15 = sfair!eid_b_pro
+    MEBTK = ASTM(sfair!p_astm, MTTHME, MEB15)
+   
+    If IsNull(MTTHME) Then
+        MTTHME = 0
+    End If
+    If IsNull(MEB15) Then
+        MEB15 = 0
+    End If
+   
+    Prometrisi
+            
+'--> Start of addition by A.Bonas@20081002
+'    If MNHIGH = 0 And MTTHME = 0 And MEB15 = 0 Then
+'        MOGOS = 0
+'        MOGOS15 = 0
+'    End If
+'<-- End of addition by A.Bonas@20081002
+   
+    MOGOS = SPVGOV * 1000
+       
+    sfair.Edit
+    sfair!eid_b_thk = Round(SPWLV / SPVGOV, 4) 'p_dens / 1000, 4) 'MEBTK
+    sfair!kub_metra = sfair!ogkos
+    sfair!met_tonnoi = sfair!ogkos * MEBTK
+    sfair!ogkos_thk = SPVGOV 'Round(MOGOS / 1000, 3)
+   
+    ''sfair!ogkos_15c = Round(((MOGOS / 1000) / MEB15) * MEBTK, 3)
+    'If MEB15 = 0 Then
+    '    sfair!ogkos_15c = 0
+    'Else
+    '    sfair!ogkos_15c = Round(((MOGOS / 1000) / MEB15) * MEBTK, 3)
+    'End If
+    sfair!ogkos_15c = SPVNSV
+   
+    sfair!baros_ton = SPWTV  'SPWLV  'Round((MOGOS / 1000) * MEBTK, 3)
+    sfair.Update
+   
+    sfair.MoveNext
+Loop Until sfair.EOF
+ 
+sfair.Close
+ 
+End Function
+ 
+ 
+ 
+ 
+ 
+'************************* EPIMETRHSH ********************************
+Public Function Epim_sf()
+Dim sed As Recordset
+Dim sed2 As Recordset
+ 
+Set sfair = CurrentDb.OpenRecordset("YpEp_Sfair")
+ 
+Init_Values
+ 
+SPH = sfair!ypsos_pro
+SSPT = sfair!therm_pro
+SPEB = sfair!eid_b_pro
+SPP = sfair!piesi_pro
+SPROD = sfair!eidos
+ 
+'SEVNSV = sfair!m3_15C_fort
+SSET = sfair!therm_fort
+SEEB = sfair!eid_b_fort
+SEP = sfair!piesi_fort
+'sfair!mtvac_fort
+ 
+STXYP = sfair!yp_cm
+STXA = sfair!a_cm
+STXB = sfair!b_cm
+STXTV = sfair!ogkos
+STXVA = sfair!oa_lt
+ 
+SPT = Round(SSPT * 2, 0) / 2
+SET_ = Round(SSET * 2, 0) / 2
+ 
+ 
+Prometrisi
+'UPDATE table fields with results
+Set sed = CurrentDb.OpenRecordset("Protokollo_Sfair")
+sed.Edit
+sed!pro_gov_ugr = SPVGOV
+sed!pro_vcf = SVCF
+sed!pro_nsv_ugr = SPVNSV
+sed!pro_aer = SPVAIR
+sed!pro_ugr_vac = SPWLV
+sed!pro_ugr_air = SPWLA
+sed!pro_sunt_aer = SDENS
+sed!pro_b_aer = SPWAIR
+sed!pro_sun_vac = SPWTV
+sed!pro_sun_air = SPWTA
+sed.Update
+sed.Close
+ 
+Fort_Posotita
+' UPDATE table fields with results
+Set sed2 = CurrentDb.OpenRecordset("Ypol_Epim_Sfair")
+sed2.Edit
+sed2!epi_gov_ugr = SEVGOV
+sed2!epi_vcf = SVCF
+sed2!epi_nsv_ugr = SEVNSV
+sed2!epi_aer = SEVAIR
+sed2!epi_ugr_vac = SEWLV
+sed2!epi_ugr_air = SEWLA
+sed2!epi_sunt_aer = SDENS
+sed2!epi_b_aer = SEWAIR
+sed2!epi_sun_vac = SEWTV
+sed2!epi_sun_air = SEWTA
+sed2!dia_sun_vac = SDWV
+sed2!dia_sun_air = SDWA
+'--> Start of addition by A.Bonas@20081203
+sed2!ypsos_epi = SEH
+'sed2!therm_epi=
+'sed2!eid_b_epi =
+'sed2!piesi_epi =
+'<-- End of addition by A.Bonas@20081203
+sed2.Update
+sed2.Close
+ 
+End Function
+ 
+ 
+ 
+ 
+ 
+'************************ LOIPES ROUTINES ************************************
+Public Sub Prometrisi()
+Dim Bullet_Type As Boolean
+ 
+If CurrentProject.AllForms("enimerosi_dex").IsLoaded Then
+    Bullet_Type = DLookup("bullets", "Dex_Stock_sfair", "[dexameni] = '" & sfair!dexameni & "'")
+Else
+    Bullet_Type = sfair!bullets  'DLookup("bullets", "P_sfair", "[code] = '" & sfair!dexameni & "'")
+End If
+ 
+If Bullet_Type = False Then
+   SPHCM = (SPH / 10) + STXYP
+'ogkos tou ugrou stin dexameni VFt :
+    SPVGOV = Round((((3 * STXA - SPHCM) * SPHCM ^ 2 * PI * STXB ^ 2) / (3 * STXA ^ 2 * 10 ^ 6)) + (STXVA / 1000), 3)
+Else
+    SPVGOV = Yp_mogos_Bullets(SPH)
+    SPVGOV = SPVGOV / 1000                  'A.Bonas@20110328
+End If
+ 
+Dim sf_rst As Recordset
+Set sf_rst = CurrentDb.OpenRecordset("sf_STM")
+ 
+PRO_SFTD15 = 0
+PRO_SFTVCF = 0
+ 
+Do
+    If sf_rst!SFTT = SPT And sf_rst!sftd15 >= SPEB Then
+        PRO_SFTD15 = sf_rst!sftd15
+        PRO_SFTVCF = sf_rst!sftvcf
+    End If
+ 
+    If PRO_SFTVCF > 0 Then
+    Exit Do
+    End If
+       
+    sf_rst.MoveNext
+ 
+Loop Until sf_rst.EOF
+ 
+ 
+If SPEB <> PRO_SFTD15 Then
+   
+    S2 = PRO_SFTD15
+    D2 = PRO_SFTVCF
+    S1 = Round(S2 - 0.005, 3)
+   
+        Dim sf_rst2 As Recordset
+        Set sf_rst2 = CurrentDb.OpenRecordset("sf_STM")
+                      
+        PRO2_SFTD15 = 0
+        PRO2_SFTVCF = 0
+                      
+        Do
+            If sf_rst2!SFTT = SPT And sf_rst2!sftd15 = S1 Then
+                PRO2_SFTD15 = sf_rst2!sftd15
+                PRO2_SFTVCF = sf_rst2!sftvcf
+            End If
+                   
+            If PRO2_SFTVCF > 0 Then
+            Exit Do
+            End If
+                   
+            sf_rst2.MoveNext
+               
+        Loop Until sf_rst2.EOF
+   
+    S1 = PRO2_SFTD15
+    D1 = PRO2_SFTVCF
+    If (S2 - S1) <> 0 Then
+        S = (SPEB - S1) / (S2 - S1)
+    End If
+    SVCF = Round(D1 - (D1 - D2) * S, 4)
+   
+Else
+    SVCF = PRO_SFTVCF
+End If
+   
+ 
+SPVNSV = Round(SVCF * SPVGOV, 3)  'Ogkos stous 15°C  VF15 = VFt * VCF
+SPVAIR = Round(STXTV - SPVGOV, 3) 'Ogkos tou aeriou stin therm.  VGt = Vdexam. - VFt
+                      
+ 
+'Dim sft As Recordset
+'Set sft = CurrentDb.OpenRecordset("sftable")
+ 
+'SFT_PRE = 0
+'SFT_DENS = 0
+'Do
+'    If sft!sftprod = SPROD And sft!sftpre >= SPP Then
+'        SFT_PRE = sft!sftpre
+'        SFT_DENS = sft!sftdens
+'    End If
+   
+'    If SFT_PRE > 0 Then
+'        sft.MovePrevious
+'        SFT_PRE2 = sft!sftpre
+'        SFT_DENS2 = sft!sftdens
+'    End If
+   
+'    If SFT_PRE > 0 Then
+'        Exit Do
+'    End If
+'    sft.MoveNext
+'Loop Until sft.EOF
+ 
+'If SPP <> SFT_PRE Then
+'    S2 = SFT_PRE
+'    D2 = SFT_DENS
+'    S1 = SFT_PRE2
+'    D1 = SFT_DENS2
+'    S = (SPP - S1) / (S2 - S1)
+'    SDENS = Round((D2 - D1) * S + D1, 2)
+'Else
+'    SDENS = SFT_DENS
+'End If
+   
+    
+SPWLV = Round(SPVNSV * SPEB, 3) 'Baros WF15 = VF15 * SG
+SPWLA = Round(SPVNSV * (SPEB - 0.0011), 3)
+'--> Start of change A.Bonas@20081008
+'SPWAIR = Round(SDENS * SPVAIR / 1000, 3) 'Baros aeriou periexomenou  WG = VGt * SGg  (SGg from T-54)
+p_dens = calcs((SPH), (SSPT), (SPP), (SPROD))
+SPWAIR = Round((p_dens * SPVAIR) / 1000, 3)
+'<-- End of change A.Bonas@20081008
+SPWTA = Round(SPWLA + SPWAIR, 3)
+SPWTV = Round(SPVNSV * SPEB + SPWAIR, 3)
+ 
+End Sub
+ 
+ 
+ 
+ 
+ 
+Public Sub Epimetrisi()
+Dim Bullet_Type As Boolean
+ 
+If CurrentProject.AllForms("enimerosi_dex").IsLoaded Then
+    Bullet_Type = DLookup("bullets", "Dex_Stock_sfair", "[dexameni] = '" & sfair!dexameni & "'")
+Else
+    Bullet_Type = sfair!bullets  'DLookup("bullets", "ypep_sfair", "[dexameni] = '" & sfair!dexameni & "'")
+End If
+ 
+If Bullet_Type = False Then
+    SEHCM = (SEH / 10) + STXYP
+    SEVGOV = Round((((3 * STXA - SEHCM) * SEHCM ^ 2 * PI * STXB ^ 2) / (3 * STXA ^ 2 * 10 ^ 6)) + (STXVA / 1000), 3)
+Else
+    SEVGOV = Yp_mogos_Bullets(SEH)
+    SEVGOV = SEVGOV / 1000                  'A.Bonas@20110328
+End If
+ 
+Dim sfe_rst As Recordset
+Set sfe_rst = CurrentDb.OpenRecordset("sf_STM")
+ 
+EPI_SFTD15 = 0
+EPI_SFTVCF = 0
+ 
+Do
+    If sfe_rst!SFTT = SET_ And sfe_rst!sftd15 >= SEEB Then
+        EPI_SFTD15 = sfe_rst!sftd15
+        EPI_SFTVCF = sfe_rst!sftvcf
+    End If
+   
+    If EPI_SFTVCF > 0 Then
+    Exit Do
+    End If
+       
+    sfe_rst.MoveNext
+   
+Loop Until sfe_rst.EOF
+ 
+ 
+If SEEB <> sfe_rst!sftd15 Then
+    S2 = EPI_SFTD15
+    D2 = EPI_SFTVCF
+    S1 = Round(S2 - 0.005, 3)
+       
+    Dim sfe_rst2 As Recordset
+    Set sfe_rst2 = CurrentDb.OpenRecordset("sf_STM")
+                 
+    EPI2_SFTD15 = 0
+    EPI2_SFTVCF = 0
+                 
+    Do
+        If sfe_rst2!SFTT = SET_ And sfe_rst2!sftd15 = S1 Then
+            EPI2_SFTD15 = sfe_rst2!sftd15
+            EPI2_SFTVCF = sfe_rst2!sftvcf
+        End If
+       
+        If EPI2_SFTVCF > 0 Then
+        Exit Do
+        End If
+           
+        sfe_rst2.MoveNext
+       
+    Loop Until sfe_rst2.EOF
+                 
+    S1 = EPI2_SFTD15
+    D1 = EPI2_SFTVCF
+    S = (SEEB - S1) / (S2 - S1)
+    SVCF = Round(D1 - (D1 - D2) * S, 4)
+Else
+    SVCF = EPI_SFTVCF
+End If
+ 
+   
+SEVNSV = Round(SVCF * SEVGOV, 3)
+SEVAIR = Round(STXTV - SEVGOV, 3)
+ 
+ 
+'Dim sfte As Recordset
+'Set sfte = CurrentDb.OpenRecordset("sftable")
+       
+'SFTE_PRE = 0
+'SFTE_DENS = 0
+      
+'Do
+'    If sfte!sftprod = SPROD And sfte!sftpre >= SEP Then
+'        SFTE_PRE = sfte!sftpre
+'        SFTE_DENS = sfte!sftdens
+'    End If
+   
+'    If SFTE_PRE > 0 Then
+'        sfte.MovePrevious
+'        SFTE_PRE2 = sfte!sftpre
+'        SFTE_DENS2 = sfte!sftdens
+'    End If
+   
+'    If SFTE_PRE > 0 Then
+'        Exit Do
+'    End If
+'    sfte.MoveNext
+'Loop Until sfte.EOF
+ 
+'If SEP <> sfte!sftpre Then
+'    S2 = SFTE_PRE
+'    D2 = SFTE_DENS
+'    S1 = SFTE_PRE2
+'    D1 = SFTE_DENS2
+'    S = (SEP - S1) / (S2 - S1)
+'    SDENS = Round((D2 - D1) * S + D1, 2)
+'Else
+'    SDENS = SFTE_DENS
+'End If
+   
+SEWLV = Round(SEVNSV * SEEB, 3)
+SEWLA = Round(SEVNSV * (SEEB - 0.0011), 3)
+'--> Start of change A.Bonas@20081008
+'SEWAIR = Round(SDENS * SEVAIR / 1000, 3)
+p_dens = calcs((SEH), (SSET), (SEP), (SPROD))
+SEWAIR = Round((p_dens * SEVAIR) / 1000, 3)
+'<-- End of change A.Bonas@20081008
+SEWTA = Round(SEWLA + SEWAIR, 3)
+SEWTV = Round(SEVNSV * SEEB + SEWAIR, 3)
+'PROT_DIAFORA
+SDWA = SEWTA - SPWTA
+SDWV = SEWTV - SPWTV
+ 
+ End Sub
+ 
+ 
+ 
+ 
+ 
+'--> Start of addition by A.Bonas@20081008
+Public Function calcs(H As Double, T As Double, P As Double, PROD As String)
+'Public Function calcs(MODE As String, H As Double, T As Double, P As Double, PROD As String)
+Dim SHCM, SVGOV, SPKG, STK, STATHERA, Rst_Type As Recordset, SUM_Wt, MB, MB_Tmp, _
+    TOTAL_p, TOTAL_wt
+ 
+ 
+STATHERA = 847.8
+ 
+'EYRESH MORIAKOU BAROUS (MB) sfair!dexamen
+If CurrentProject.AllForms("enimerosi_dex").IsLoaded Then
+    Set Rst_Type = CurrentDb.OpenRecordset("select * from Ximikoi_typoi_aeriwn_stock " & _
+                            "where [eidos] = '" & sfair!eidos & "'")
+ElseIf CurrentProject.AllForms("protokollo_sfair_2").IsLoaded Then
+    Set Rst_Type = CurrentDb.OpenRecordset("Ximikoi_typoi_aeriwn_protok")
+Else
+    Set Rst_Type = CurrentDb.OpenRecordset("Ximikoi_typoi_aeriwn_ypol")
+End If
+ 
+If Rst_Type.RecordCount > 0 Then
+    Rst_Type.MoveFirst
+    Do
+        If Rst_Type!pososto_mole > 0 Then
+            SUM_Wt = SUM_Wt + (Rst_Type!ab_aeriou * Rst_Type!pososto_mole)
+        End If
+        Rst_Type.MoveNext
+    Loop Until Rst_Type.EOF
+ 
+    Rst_Type.MoveFirst
+    Do
+        Rst_Type.Edit
+        If Rst_Type!pososto_mole > 0 Then
+            Rst_Type!pososto_wt = Round((((Rst_Type!ab_aeriou * Rst_Type!pososto_mole) / SUM_Wt) * 100), 2)
+        End If
+        Rst_Type.Update
+        MB_Tmp = MB_Tmp + ((Rst_Type!ab_aeriou * Rst_Type!pososto_mole) / Rst_Type!ab_aeriou)
+        Rst_Type.MoveNext
+    Loop Until Rst_Type.EOF
+    If MB_Tmp <> 0 Then
+        MB = SUM_Wt / MB_Tmp
+    End If
+ 
+ 
+'METATROPI PIESIS APO KP/CM2 SE KG/M2
+    SPKG = (P + 1) * 10000
+'METATROPI THERMOKRASIAS APO CELSIUS SE KELVIN
+    STK = T + 273.5
+ 
+'YPOLOGISMOS PYKNOTHTAS
+    If MB = 0 Or IsNull(MB) Then
+        If flag_message = False Then
+            MsgBox "Παρακαλώ καταχωρήστε σωστά την περιεκτικότητα του αερίου " & sfair!eidos, vbCritical
+            flag_message = True
+        End If
+    Else
+        TOTAL_p = SPKG / ((STATHERA / MB) * STK)
+    End If
+ 
+    calcs = TOTAL_p
+ 
+End If
+ 
+Rst_Type.Close
+ 
+''UPDATE table fields with results
+ 
+'Dim sed As Recordset
+'Set sed = CurrentDb.OpenRecordset("Protokollo_Sfair")
+ 
+''YPOLOGISMOS TELIKOU BAROUS
+'sed.MoveFirst
+''TOTAL_wt = TOTAL_p * sed!pro_aer
+ 
+'sed.Edit
+''PROMETRHSH
+'If MODE = "1" Then
+'    sed!pro_b_aer = TOTAL_p * sed!pro_aer
+''    sed!pro_new_method_gov = TOTAL_p
+''    sed!pro_new_method_wt = TOTAL_wt
+''EPIMETRHSH
+'ElseIf MODE = "2" Then
+'    sed!epi_b_aer = TOTAL_p * sed!epi_aer
+''    sed!epi_new_method_gov = TOTAL_p
+''    sed!epi_new_method_wt = TOTAL_wt
+'End If
+ 
+'sed.Update
+'sed.Close
+ 
+End Function
+'<-- End of addition by A.Bonas@20081008
+ 
+ 
+ 
+ 
+ 
+Public Sub Fort_Posotita()
+Dim Bullet_Type As Boolean
+Dim rst_bullets_tbl As Recordset
+Dim i
+ 
+If CurrentProject.AllForms("enimerosi_dex").IsLoaded Then
+    Bullet_Type = DLookup("bullets", "Dex_Stock_sfair", "[dexameni] = '" & sfair!dexameni & "'")
+Else
+    Bullet_Type = sfair!bullets  'DLookup("bullets", "P_sfair", "[code] = '" & sfair!dexameni & "'")
+End If
+ 
+'SEHCM = (SEH / 10) + STXYP
+'SEVGOV = Round((((3 * STXA - SEHCM) * SEHCM ^ 2 * PI * STXB ^ 2) / (3 * STXA ^ 2 * 10 ^ 6)) + (STXVA / 1000), 3)
+   
+Dim sfe_rst As Recordset
+Set sfe_rst = CurrentDb.OpenRecordset("sf_STM")
+ 
+Do
+    If sfe_rst!SFTT = SET_ And sfe_rst!sftd15 >= SEEB Then
+        EPI_SFTD15 = sfe_rst!sftd15
+        EPI_SFTVCF = sfe_rst!sftvcf
+    End If
+   
+    If EPI_SFTVCF > 0 Then
+    Exit Do
+    End If
+       
+    sfe_rst.MoveNext
+   
+Loop Until sfe_rst.EOF
+ 
+ 
+If SEEB <> sfe_rst!sftd15 Then
+    S2 = sfe_rst!sftd15
+    D2 = sfe_rst!sftvcf
+    S1 = Round(S2 - 0.005, 3)
+       
+    Dim sfe_rst2 As Recordset
+    Set sfe_rst2 = CurrentDb.OpenRecordset("sf_STM")
+                 
+    Do
+        If sfe_rst2!SFTT = SET_ And sfe_rst2!sftd15 = S1 Then
+            EPI2_SFTD15 = sfe_rst2!sftd15
+            EPI2_SFTVCF = sfe_rst2!sftvcf
+        End If
+       
+        If EPI2_SFTVCF > 0 Then
+        Exit Do
+        End If
+           
+        sfe_rst2.MoveNext
+       
+    Loop Until sfe_rst2.EOF
+                 
+    S1 = EPI2_SFTD15
+    D1 = EPI2_SFTVCF
+    S = (SEEB - S1) / (S2 - S1)
+    SVCF = Round(D1 - (D1 - D2) * S, 4)
+Else
+    SVCF = EPI_SFTVCF
+End If
+ 
+SEVNSV = sfair!m3_15C_fort
+SEVGOV = Round(SEVNSV / SVCF, 3)
+'SEVNSV = Round(SVCF * SEVGOV, 3)
+SEVAIR = Round(STXTV - SEVGOV, 3)
+'Dim sfte As Recordset
+''--> Start of change by A.Bonas@20081031
+'Set sfte = CurrentDb.OpenRecordset("sftable", dbOpenSnapshot)
+''Set sfte = CurrentDb.OpenRecordset("sftable", dbOpenSnapshot)
+''<-- End of change by A.Bonas@20081031
+ 
+'Do
+'    If sfte!sftprod = SPROD And sfte!sftpre >= SEP Then
+'        SFTE_PRE = sfte!sftpre
+'        SFTE_DENS = sfte!sftdens
+'    End If
+   
+''--> Start of change by A.Bonas@20081031
+'    If SFTE_PRE > 0 And sfte.AbsolutePosition > 0 Then
+''    If SFTE_PRE > 0  Then
+''<-- End of change by A.Bonas@20081031
+'        sfte.MovePrevious
+'        SFTE_PRE2 = sfte!sftpre
+'        SFTE_DENS2 = sfte!sftdens
+'    End If
+   
+'    If SFTE_PRE > 0 Then
+'        Exit Do
+'    End If
+'    sfte.MoveNext
+'Loop Until sfte.EOF
+ 
+'If SEP <> sfte!sftpre Then
+'    S2 = SFTE_PRE
+'    D2 = SFTE_DENS
+'    S1 = SFTE_PRE2
+'    D1 = SFTE_DENS2
+'    S = (SEP - S1) / (S2 - S1)
+'    SDENS = Round((D2 - D1) * S + D1, 2)
+'Else
+'    SDENS = SFTE_DENS
+'End If
+   
+SEWLV = Round(SEVNSV * SEEB, 3)  'Baros WF15 = VF15 * SG
+SEWLA = Round(SEVNSV * (SEEB - 0.0011), 3)
+'--> Start of change A.Bonas@20081008
+'SEWAIR = Round(SDENS * SEVAIR / 1000, 3) 'Baros aeriou periexomenou  WG = VGt * SGg  (SGg from T-54)
+p_dens = calcs((SEH), (SSET), (SEP), (SPROD))
+SEWAIR = Round((p_dens * SEVAIR) / 1000, 3)
+'<-- End of change A.Bonas@20081008
+SEWTA = Round(SEWLA + SEWAIR, 3)
+SEWTV = Round(SEVNSV * SEEB + SEWAIR, 3)
+ 
+'PROT_DIAFORA
+SDWA = SEWTA + SPWTA
+SDWV = SEWTV + SPWTV
+'--> Start of addition by A.Bonas@20081203
+If Bullet_Type = False Then
+    For i = 0 To 999999 Step 1 / 10
+        If SEVGOV <= Round((((3 * STXA - i) * i ^ 2 * PI * STXB ^ 2) / (3 * STXA ^ 2 * 10 ^ 6)) + (STXVA / 1000), 3) Then
+            Exit For
+        End If
+    Next i
+    SEH = Round(10 * (i - STXYP), 2)
+Else
+    Set rst_bullets_tbl = CurrentDb.OpenRecordset("select * from bullets_table where dexameni='" & sfair!dexameni & "' order by height")
+    rst_bullets_tbl.MoveFirst
+    i = 1
+    Do
+        'If SEVGOV <= rst_bullets_tbl![volume] Then                      'A.Bonas@20110328
+        If SEVGOV <= (rst_bullets_tbl![volume] / 1000) Then              'A.Bonas@20110328
+            If i > 1 Then
+                rst_bullets_tbl.MovePrevious
+            End If
+            Exit Do
+        End If
+        rst_bullets_tbl.MoveNext
+        i = i + 1
+    Loop Until rst_bullets_tbl.EOF
+    If rst_bullets_tbl.EOF = False Then
+        'i = ((SEVGOV - rst_bullets_tbl![volume]) / rst_bullets_tbl![volume_mm]) + rst_bullets_tbl![height]             'A.Bonas@20110328
+        i = ((SEVGOV - (rst_bullets_tbl![volume] / 1000)) / rst_bullets_tbl![volume_mm]) + rst_bullets_tbl![height]     'A.Bonas@20110328
+    Else
+        i = 0
+    End If
+    rst_bullets_tbl.Close
+    Set rst_bullets_tbl = Nothing
+    SEH = Round((i - STXYP), 2)
+End If
+'<-- End of addition by A.Bonas@20081203
+ 
+End Sub
+ 
+ 
+Public Sub Init_Values()
+    T = 0
+    SPH = 0
+    SSPT = 0
+    SPEB = 0
+    SPP = 0
+    SEH = 0
+    SSET = 0
+    SEEB = 0
+    SEP = 0
+    STXYP = 0
+    SPHCM = 0
+    SPVGOV = 0
+    MWAIT = 0
+    STXA = 0
+    STXB = 0
+    STXTV = 0
+    PI = 0
+    STXVA = 0
+    S1 = 0
+    S2 = 0
+    D2 = 0
+    D1 = 0
+    S = 0
+    SPVNSV = 0
+    SPVAIR = 0
+    SDENS = 0
+    SPWLV = 0
+    SPWLA = 0
+    SEVNSV = 0
+    PRO_SFTD15 = 0
+    SPWAIR = 0
+    SPWTA = 0
+    SPWTV = 0
+    SPT = 0
+    SVCF = 0
+    SEHCM = 0
+    SET_ = 0
+    SEWTA = 0
+    SDWA = 0
+    SEWTV = 0
+    SDWV = 0
+    SEVGOV = 0
+    SEWLV = 0
+    PRO_SFTVCF = 0
+    SEWLA = 0
+    SEVAIR = 0
+    SEWAIR = 0
+    SFT_DENS = 0
+    SFT_PRE = 0
+    SFTE_DENS = 0
+    SFTE_PRE = 0
+    SFT_PRE2 = 0
+    SFT_DENS2 = 0
+    SFTE_DENS2 = 0
+    SFTE_PRE2 = 0
+    PRO2_SFTD15 = 0
+    PRO2_SFTVCF = 0
+    EPI_SFTD15 = 0
+    EPI2_SFTD15 = 0
+    EPI_SFTVCF = 0
+    EPI2_SFTVCF = 0
+    PI = 3.14
+    flag_message = False
+End Sub
+ 
+ 
+Public Function Yp_mogos_Bullets(YPSOS)
+'Dim ShellFactor_flag As Boolean
+Dim rst_bullets_tbl As Recordset
+Dim tOGOS, tOGKP
+ 
+'ShellFactor_flag = DLookup("ShellFactor", "Parameters")
+ 
+Set rst_bullets_tbl = CurrentDb.OpenRecordset("select * from bullets_table where dexameni='" & sfair!dexameni & "' order by height")
+ 
+rst_bullets_tbl.MoveFirst
+Do
+    If YPSOS < rst_bullets_tbl![height] Then
+        rst_bullets_tbl.MovePrevious
+        Exit Do
+    End If
+    rst_bullets_tbl.MoveNext
+Loop Until rst_bullets_tbl.EOF
+ 
+If rst_bullets_tbl.EOF = False Then
+    tOGOS = rst_bullets_tbl![volume] + ((YPSOS - rst_bullets_tbl![height]) * rst_bullets_tbl![volume_mm])
+Else
+    MsgBox "Δώσατε μεγάλη τιμή ύψους και δεν μπορεί να υπολογιστεί ο όγκος.", vbOKOnly, "Προσοχή!"
+    Yp_mogos_Bullets = 0
+    Exit Function
+End If
+ 
+tOGKP = sfair!ogk_kon
+If IsNull(tOGKP) Then
+    tOGKP = 0
+End If
+'If ShellFactor_flag = True Then
+'    Shell_Correction_Factor                     'A.Bonas@20081201
+'End If
+'MOGY = MOGOS
+ 
+'tOGOS = tOGOS + tOGKP                           'A.Bonas@20110328
+Yp_mogos_Bullets = tOGOS
+ 
+rst_bullets_tbl.Close
+Set rst_bullets_tbl = Nothing
+ 
+End Function

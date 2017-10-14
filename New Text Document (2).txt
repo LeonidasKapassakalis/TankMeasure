@@ -1,0 +1,887 @@
+---KYLINDRIKES
+Dim MASTM, MNHIGH, MTTHME, THERMPER, MEB15, L, MPCREND, MPCRACAP, MCREND, MOGOS, MCRACAP, MOGOS1, _
+MDIFF, Mflag, MCREND1, MOGKP, MOGY, MOGPO, MOGOS15, VCF, F, MBAPK, TK, TK1, TK2, TEB15, _
+Dior, A, SG, SGTK, eibar, k0f, k1f, k0j, k1j, k0g, k1g, aint, bint, k0, k1, MEBTK, MTEMP, _
+MTEMP1, MTEMP2, LT_Fort, XILGR, MEYEPL, MEYEPK, MCOEF, MDHIGH, Katharos_OGKOS As Double
+Dim dx_value, dy_value, dy_diff As String, CSGTK As Double
+Dim tmp_MEBTK
+ 
+Dim protok As Recordset
+Dim rst As Recordset
+ 
+Option Compare Database
+Option Explicit
+ 
+ 
+ 
+ 
+ 
+'*********************** PROTOKOLLO ****************************************
+Public Function Protokollo()
+ 
+Set protok = CurrentDb.OpenRecordset("P_kulindr")
+Set rst = CurrentDb.OpenRecordset("Protokollo_Kulindr")
+ 
+MOGPO = 0
+MOGY = 0
+MOGKP = 0
+CSGTK = 0                                    'A.Bonas@20090522
+ 
+MASTM = protok!p_astm
+MNHIGH = protok!ypsos_pro
+MTTHME = protok!therm_pro
+MEB15 = protok!eid_b_pro
+THERMPER = protok!therm_per_pro                 'A.Bonas@20081201
+ 
+'--> Start of addition by A.Bonas@20090522
+If IsNull(MNHIGH) Then
+    MNHIGH = 0
+End If
+If IsNull(MTTHME) Then
+    MTTHME = 0
+End If
+If IsNull(MEB15) Then
+    MEB15 = 0
+End If
+'<-- End of addition by A.Bonas@20090522
+ 
+tmp_MEBTK = ASTM(protok!p_astm, MTTHME, MEB15)
+ogkos
+Vol
+ 
+MBAPK = Round(MOGOS15 * MEB15, 0)
+ 
+'--> Start of addition by A.Bonas@20090522
+    If MNHIGH = 0 And MTTHME = 0 And MEB15 = 0 Then
+        MOGOS = 0
+        MOGOS15 = 0
+    End If
+'<-- End of addition by A.Bonas@20090522
+ 
+Disp_Res
+ 
+'epimetrisi
+ 
+MOGPO = 0
+MOGY = 0
+MOGKP = 0
+CSGTK = 0                                    'A.Bonas@20090522
+ 
+MASTM = protok!p_astm
+MNHIGH = protok!ypsos_epi
+MTTHME = protok!therm_epi
+MEB15 = protok!eid_b_epi
+THERMPER = protok!therm_per_epi                'A.Bonas@20081201
+ 
+tmp_MEBTK = ASTM(protok!p_astm, MTTHME, MEB15)
+ogkos
+Vol
+ 
+MBAPK = Round(MOGOS15 * MEB15, 0)
+ 
+Disp_res2_protokollo
+ 
+End Function
+ 
+ 
+ 
+ 
+ 
+'************************* APOGRAFH **************************************
+Public Function stock()
+ 
+Set protok = CurrentDb.OpenRecordset("Dex_Stock_kulindr")
+Set rst = CurrentDb.OpenRecordset("Enimerosi_Dex")
+ 
+Dim ShellFactor_flag, answ
+ShellFactor_flag = DLookup("shellfactor", "parameters")
+If ShellFactor_flag = True Then
+    answ = MsgBox("Είναι ενεργοποιημένος ο συντελεστής διόρθωσης θερμοκρασίας κελύφους. Να συνεχίστει η ενημέρωση;", vbYesNo, "ΠΡΟΣΟΧΗ!!")
+    If answ = vbNo Then
+        Exit Function
+    End If
+End If
+'--> Start of addition by A.Bonas@20060629
+'Προσθήκη προκειμένου να μπορέσουμε να επιτύχουμε την ταξινόμηση του Μηνιαίου Δελτίου
+'Δεξαμενών βάση του είδους καυσίμου. ΠΡΟΣΟΧΗ!!! Ο Α/Α Ταξινόμησης αναφέρεται στις υποκατηγορίες.
+'Αν ένα είδος δεν έχει υποκατηγορία, τότε θεωρούμε ότι το είδος αυτό αποτελεί μια υποκατηγορία.
+'Αυτή η προσθήκη έγινε σε συνδυασμό με τη προσθήκη ενός πεδίου "sortnumber" στους πίνακες
+'"Kausima", "Enimerosi_Dex", "Data_miniaio_deltio" και στη φόρμα "Kausima" με ανάλογους ελέγχους.
+'Η ενημερώση του πίνακα "Enimerosi_Dex" γίνεται με το κουμπί "ΕΝΗΜΕΡΩΣΗ" κατά την
+'Ενημέρωση Δεξαμενών (εξού και ο κώδικας που έχει γραφτεί παρακάτω).
+'Επίσης,στο query "monthly_stock" πρόσθεσα να κάνει sort το "sortnumber" και το
+'"dexameni" του πίνακα "Enimerosi_Dex".
+'Ακόμη, στο report "stocks" και στα sort fields που είχε προσθέσαμε στην αρχή το "sortnumber"
+'χωρίς grouping. Στο module "stocks" πρόσθεσα να διαβάζει τον Α/Α ταξινόμησης για
+'τις extra εγγραφές που προσθέτονται ως "Σωλήνες/Δοχεία".
+Dim SNumber
+Dim Kaus As Recordset
+Set Kaus = CurrentDb.OpenRecordset("Kausima")
+ 
+rst.MoveFirst
+Do
+    SNumber = DLookup("sortnumber", "Kausima", "[eidos] = '" & rst!eidos & "'")
+    rst.Edit
+    rst!sortnumber = SNumber
+    rst.Update
+    rst.MoveNext
+Loop Until rst.EOF
+rst.Close
+'<-- End of addition by A.Bonas@20060629
+ 
+Do
+'--> Start of deletion by A.Bonas@20060629
+    'If protok!ypsos_pro = 0 Or protok!therm_pro = 0 Or protok!eid_b_pro = 0 Then
+   
+    'protok.MoveNext
+    'If protok.EOF = True Then
+    'Exit Do
+    'End If
+   
+    'End If
+'<-- End of deletion by A.Bonas@20060629
+    
+    MOGPO = 0
+    MOGY = 0
+    MOGKP = 0
+    CSGTK = 0
+   
+    MASTM = protok!p_astm
+    MNHIGH = protok!ypsos_pro
+    MTTHME = protok!therm_pro
+    MEB15 = protok!eid_b_pro
+    'THERMPER = protok!therm_per_epi
+    THERMPER = DLookup("def_therm_periv", "parameters")
+    If IsNull(MNHIGH) Then
+        MNHIGH = 0
+    End If
+    If IsNull(MTTHME) Then
+        MTTHME = 0
+    End If
+    If IsNull(MEB15) Then
+        MEB15 = 0
+    End If
+   
+    tmp_MEBTK = ASTM(protok!p_astm, MTTHME, MEB15)
+    ogkos
+    Vol
+   
+    MBAPK = Round(MOGOS15 * MEB15, 0)
+   
+'--> Start of addition by A.Bonas@20081002
+    If MNHIGH = 0 And MTTHME = 0 And MEB15 = 0 Then
+        MOGOS = 0
+        MOGOS15 = 0
+    End If
+'<-- End of addition by A.Bonas@20081002
+       
+    protok.Edit
+   
+    protok!eid_b_thk = MEBTK
+    protok!kub_metra = protok!ogkos
+    protok!met_tonnoi = protok!ogkos * MEBTK
+            
+    protok!ogkos_thk = Round(MOGOS / 1000, 3)
+    protok!ogkos_15c = Round(MOGOS15 / 1000, 3)
+    protok!baros_ton = Round(MBAPK / 1000, 3)
+   
+    protok.Update
+   
+    protok.MoveNext
+ 
+Loop Until protok.EOF
+ 
+protok.Close
+ 
+End Function
+ 
+ 
+ 
+ 
+ 
+'************************ EPIMETRHSH ************************************
+Public Function Ypol_Epim()
+ 
+Set protok = CurrentDb.OpenRecordset("YpEp_Kulindr")
+Set rst = CurrentDb.OpenRecordset("Ypol_Epim_Kulindr")
+ 
+'prometrisi
+MOGPO = 0
+MOGY = 0
+MOGKP = 0
+CSGTK = 0                                    'A.Bonas@20090522
+ 
+MASTM = protok!p_astm
+MNHIGH = protok!ypsos_pro
+MTTHME = protok!therm_pro
+MEB15 = protok!eid_b_pro
+THERMPER = protok!therm_per_pro                 'A.Bonas@20081201
+ 
+tmp_MEBTK = ASTM(protok!p_astm, MTTHME, MEB15)
+ogkos
+Vol
+ 
+MBAPK = Round(MOGOS15 * MEB15, 0)
+ 
+Disp_Res
+ 
+'epimetrisi
+MOGPO = 0
+MOGY = 0
+MOGKP = 0
+CSGTK = 0                                    'A.Bonas@20090522
+ 
+Epimetrisi
+ 
+Disp_res2_epimetrisi
+ 
+End Function
+ 
+ 
+ 
+ 
+ 
+Public Sub Epimetrisi()
+ 
+MASTM = protok!p_astm
+LT_Fort = protok!litra_fort
+XILGR = protok!xiliogr_fort
+ 
+If LT_Fort = 0 Or IsNull(LT_Fort) Then
+   LT_Fort = XILGR / protok!eid_b_fort
+Else
+   XILGR = LT_Fort * protok!eid_b_fort
+End If
+ 
+'prepei na ginei update o pinakas me ta apotelesmata prometrisis!!!!!
+MEYEPL = LT_Fort + protok!pro_L15C
+MEYEPK = XILGR + protok!pro_xilgr
+ 
+If LT_Fort > 0 Then
+   MTTHME = Round((XILGR * protok!therm_fort + protok!pro_xilgr * protok!therm_pro) / MEYEPK, 2)
+Else
+   MTTHME = Round(2 * protok!therm_fort - protok!therm_pro, 2)
+End If
+ 
+MEB15 = MEYEPK / MEYEPL
+MOGOS = 1000
+ 
+tmp_MEBTK = ASTM(protok!p_astm, MTTHME, MEB15)
+Vol
+ 
+MOGOS = Round(MEYEPL / VCF, 0)
+ 
+Disp_res2_epimetrisi
+ 
+Katharos_OGKOS = MOGOS                           'A.Bonas@20081201
+MOGKP = protok!ogk_kon
+MOGOS = MOGOS - MOGKP
+ 
+If protok!pl_orofi = False Then
+    'Shell_Correction_Factor                     'A.Bonas@20081201
+    YPSOS
+Else
+    MOGPO = Round(protok!bar_oro / MEBTK, 0)
+    MOGOS = MOGOS + MOGPO
+    'Shell_Correction_Factor                     'A.Bonas@20081201
+    YPSOS
+End If
+ 
+rst.Edit
+rst!epi_ugr = MOGOS
+rst!epi_pl_or = MOGPO
+rst!epi_kat_pl = MOGKP
+rst!epi_ups = MNHIGH
+rst.Update
+rst.Close
+ 
+End Sub
+ 
+ 
+ 
+ 
+ 
+Public Sub YPSOS()
+ 
+L = 0
+MPCREND = 0
+MPCRACAP = 0
+ 
+Do
+    L = L + 1
+   
+    dx_value = "d" & (L) & "x"
+    dy_value = "d" & (L) & "y"
+    MCREND = protok(dy_value)  'DLookup(dy_value, "P_kulindr")
+    MCRACAP = protok(dx_value) 'DLookup(dx_value, "P_kulindr")
+   
+    If MOGOS > MCRACAP Then
+       MPCREND = MCREND
+       MPCRACAP = MCRACAP
+    Else
+       MDIFF = MOGOS - MPCRACAP
+       MCOEF = Round((MCRACAP - MPCRACAP) / (MCREND - MPCREND), 3)
+       MDHIGH = Round(MDIFF / MCOEF, 0)
+       MNHIGH = MDHIGH + MPCREND
+       Exit Do
+    End If
+   
+Loop Until L = 12
+ 
+End Sub
+ 
+ 
+ 
+ 
+ 
+'************** LOIPES ROUTINES **************************************
+Public Sub Disp_Res()
+ 
+rst.Edit
+     
+rst!pro_ugr = MOGY
+rst!pro_pl_or = MOGPO
+rst!pro_kat_pl = MOGKP
+rst!pro_kath = MOGOS
+rst!pro_th_k = MEBTK
+rst!pro_sunt = VCF
+rst!pro_L15C = MOGOS15
+rst!pro_xilgr = MBAPK
+ 
+rst.Update
+ 
+End Sub
+ 
+ 
+ 
+ 
+ 
+Public Sub Disp_res2_epimetrisi()
+ 
+Set rst = CurrentDb.OpenRecordset("Ypol_Epim_Kulindr")
+ 
+rst.Edit
+ 
+'rst!epi_ups = MNHIGH
+rst!epi_therm = MTTHME
+rst!epi_eid_b = Round(MEB15, 4)
+'rst!epi_ugr = MOGPO
+'rst!epi_pl_or = MOGOS
+'rst!epi_kat_pl = MOGKP
+rst!epi_kath = Katharos_OGKOS   'MOGOS                      'A.Bonas@20081201
+rst!epi_th_k = MEBTK
+rst!epi_sunt = VCF
+rst!epi_litra = MEYEPL
+rst!epi_xilgr = MEYEPK
+ 
+rst.Update
+ 
+End Sub
+ 
+ 
+ 
+ 
+ 
+Public Sub Disp_res2_protokollo()
+ 
+rst.Edit
+ 
+rst!epi_ugr = MOGY
+rst!epi_pl_or = MOGPO
+rst!epi_kat_pl = MOGKP
+rst!epi_kath = MOGOS
+rst!epi_th_k = MEBTK
+rst!epi_sunt = VCF
+rst!epi_L15C = MOGOS15
+rst!epi_xilgr = MBAPK
+rst!fp_litra = MOGOS15 - rst!pro_L15C
+rst!fp_xilgr = MBAPK - rst!pro_xilgr
+ 
+rst.Update
+rst.Close
+ 
+End Sub
+ 
+ 
+ 
+ 
+ 
+'--> Start of addition by A.Bonas@20081201
+Public Sub Shell_Correction_Factor()
+Dim TSh As Integer, CorrFactor As Double
+Dim Therm_Per_Fahrenheit As Double, Therm_Ygr_Fahrenheit As Double
+       
+    Therm_Ygr_Fahrenheit = (MTTHME * (9 / 5)) + 32
+    If protok!monosi = True Then
+        TSh = Therm_Ygr_Fahrenheit
+    Else
+        Therm_Per_Fahrenheit = (THERMPER * (9 / 5)) + 32
+        TSh = ((7 * Therm_Ygr_Fahrenheit) + Therm_Per_Fahrenheit) / 8
+    End If
+    CorrFactor = DLookup("[shell_correct_factor]", "Correct_factor", "[shell_temp]=" & TSh & "")
+    If IsNull(CorrFactor) Or CorrFactor = 0 Then
+        CorrFactor = 1
+   End If
+    MOGOS = MOGOS * CorrFactor
+End Sub
+'<-- End of addition by A.Bonas@20081201
+ 
+ 
+ 
+ 
+ 
+Public Sub ogkos()
+'Dim ShellFactor_Flag As Boolean
+ 
+'ShellFactor_Flag = DLookup("ShellFactor", "Parameters")
+ 
+'Dim Bullet_Type As Boolean
+'If CurrentProject.AllForms("enimerosi_dex").IsLoaded Then
+'    Bullet_Type = DLookup("bullets", "Dex_Stock_kulindr", "[code] = '" & protok!dexameni & "'")
+'Else
+'    Bullet_Type = DLookup("bullets", "P_kulindr", "[code] = '" & protok!dexameni & "'")
+'End If
+ 
+MOGOS = 0
+ 
+If protok!pl_orofi = False Then
+    'If Bullet_Type = False Then
+    Yp_mogos
+    'Else
+    '    Yp_mogos_Bullets
+    'End If
+   
+    'If ShellFactor_Flag = True Then
+    '   Shell_Correction_Factor                     'A.Bonas@20081201
+    'End If
+End If
+If protok!pl_orofi = True Then
+    'If Bullet_Type = False Then
+    Yp_mogos
+    'Else
+    '    Yp_mogos_Bullets
+    'End If
+   
+    'If ShellFactor_Flag = True Then
+    '   Shell_Correction_Factor                     'A.Bonas@20081201
+    'End If
+    Mflag = 1
+    If protok!the_pod = "K" Then
+        If MNHIGH <= (protok!per_p_ano1 + protok!per_p_ano2) / 2 And MNHIGH >= protok!per_p_ano1 Then
+            Mflag = 0
+        Else
+            If MNHIGH < protok!per_p_ano1 Then
+                Mflag = 0
+            End If
+        End If
+    Else
+        If MNHIGH <= (protok!per_p_kat1 + protok!per_p_kat2) / 2 And MNHIGH >= protok!per_p_kat1 Then
+            Mflag = 0
+        Else
+            If MNHIGH < protok!per_p_kat1 Then
+                Mflag = 0
+            End If
+        End If
+    End If
+   
+'--> Start of change by A.Bonas@20090522
+'    MOGPO = Round(protok!bar_oro / MEBTK, 0)
+'    If Mflag = 1 Then
+'        MOGOS = MOGOS - MOGPO
+'    End If
+    If Mflag = 1 Then
+        If MEBTK <> 0 Then
+            MOGPO = Round(protok!bar_oro / MEBTK, 0)
+            'MOGOS = MOGOS - MOGPO '(protok!bar_oro / MEBTK) 'CSGTK)
+        Else
+            MOGPO = Round(protok!bar_oro / MEB15, 0)
+        End If
+        MOGOS = MOGOS - MOGPO
+    End If
+'<-- End of change by A.Bonas@20090522
+   
+    Mflag = 0
+End If
+ 
+End Sub
+ 
+ 
+ 
+ 
+ 
+Public Function ASTM(var_p_astm, var_MTTHME, var_MEB15)
+ 
+'--> Start of addition by A.Bonas@20090522
+If var_MEB15 > 0.62 Then
+ 
+MEBTK = 0
+'<-- End of addition by A.Bonas@20090522
+ 
+'CSGA
+If var_p_astm = "A" Then
+ 
+TK = var_MTTHME
+TEB15 = var_MEB15
+TK1 = TK - Int(TK)
+TK2 = Round(TK1 / 0.25, 0)
+TK = Int(TK) + (TK2 * 0.25)
+TK = TK - 15
+Dior = 1 - 0.000023 * TK - 0.00000002 * TK ^ 2
+A = 0.0006139723 / (TEB15 * TEB15)
+SG = Exp(-A * TK - 0.8 * A ^ 2 * TK ^ 2) * TEB15
+SGTK = SG / Dior
+MEBTK = Round(SGTK, 4) + 0.00000001
+MEBTK = Round(MEBTK, 4)
+ 
+End If
+ 
+'CSGB
+If var_p_astm = "B" Then
+ 
+TK = var_MTTHME
+TEB15 = var_MEB15
+TK1 = TK - Int(TK)
+TK2 = Round(TK1 / 0.25, 0)
+TK = Int(TK) + (TK2 * 0.25)
+k0f = 0.0001869696
+k1f = 0.0004862
+k0j = 0.0005945418
+k1j = 0
+k0g = 0.0003464228
+k1g = 0.0004388
+aint = -0.00336312
+bint = 0.0026803206
+TK = TK - 15
+Dior = 1 - 0.000023 * TK - 0.00000002 * TK ^ 2
+SG = TEB15
+ 
+If SG <= 0.7785 Then
+    k0 = k0g
+    k1 = k1g
+ElseIf SG <= 0.8385 Then
+    k0 = k0j
+    k1 = k1j
+ElseIf SG > 0.8385 Then
+    k0 = k0f
+    k1 = k1f
+End If
+ 
+A = k1 / TEB15 + k0 / (TEB15 * TEB15)
+ 
+If SG >= 0.7705 And SG <= 0.7875 Then
+  A = aint + (bint / (TEB15 ^ 2))
+End If
+ 
+SG = Exp(-A * TK - 0.8 * A ^ 2 * TK ^ 2) * TEB15
+SGTK = SG / Dior
+MEBTK = Round(SGTK, 4) + 0.00000001
+MEBTK = Round(MEBTK, 4)
+ 
+End If
+ 
+'Gia ta lipantika ASTM 53 D
+If var_p_astm = "D" Then
+ 
+TK = var_MTTHME
+TEB15 = var_MEB15
+TK1 = TK - Int(TK)
+TK2 = Round(TK1 / 0.25, 0)
+TK = Int(TK) + (TK2 * 0.25)
+TK = TK - 15
+Dior = 1 - 0.000023 * TK - 0.00000002 * TK ^ 2
+A = 0.0006278 / TEB15
+SG = Exp(-A * TK - 0.8 * A ^ 2 * TK ^ 2) * TEB15
+SGTK = SG / Dior
+MEBTK = Round(SGTK, 4) + 0.00000001
+MEBTK = Round(MEBTK, 4)
+ 
+End If
+ 
+'--> Start of addition by A.Bonas@20090522
+Else
+    MEBTK = var_MEB15
+End If
+CSGTK = MEBTK
+'<-- End of addition by A.Bonas@20090522
+   
+ASTM = MEBTK
+ 
+End Function
+ 
+ 
+ 
+ 
+ 
+Public Sub Vol()
+ 
+If protok!p_astm = "A" Then
+ 
+MTEMP = MTTHME - 15
+MOGOS = Round(MOGOS, 0)
+MTEMP1 = MTEMP - Int(MTEMP)
+MTEMP2 = Round(MTEMP1 / 0.25, 0)
+MTEMP = Int(MTEMP) + (MTEMP2 * 0.25)
+TEB15 = Round((MEB15 / 2) + 0.0000001, 3)
+TEB15 = TEB15 * 2
+'--> Start of change by A.Bonas@20090522
+'A = 0.0006139723 / (TEB15 * TEB15)
+If TEB15 = 0 Then
+    A = 0
+Else
+    A = 0.0006139723 / (TEB15 * TEB15)
+End If
+'<-- End of change by A.Bonas@20090522
+F = -A * MTEMP * (1 + 0.8 * A * MTEMP)
+VCF = Exp(F)
+VCF = Round(VCF, 4) + 0.00000001
+VCF = Round(VCF, 4)
+MOGOS15 = Round(MOGOS * VCF, 0)
+ 
+End If
+ 
+If protok!p_astm = "B" Then
+ 
+MTEMP = MTTHME - 15
+MOGOS = Round(MOGOS, 0)
+MTEMP1 = MTEMP - Int(MTEMP)
+MTEMP2 = Round(MTEMP1 / 0.25, 0)
+MTEMP = Int(MTEMP) + (MTEMP2 * 0.25)
+TEB15 = Round((MEB15 / 2) + 0.0000001, 3)
+TEB15 = TEB15 * 2
+ 
+'--> Start of addition by A.Bonas@20090522
+If TEB15 = 0 Then
+     A = 0
+'<-- End of addition by A.Bonas@20090522
+ElseIf TEB15 < 0.7705 Then
+     A = (346.4228 / (TEB15 * TEB15 * 1000000)) + (0.4388 / (TEB15 * 1000))
+ElseIf TEB15 <= 0.7875 Then
+       k0 = 0.0026803206
+       k1 = -0.00336312
+       A = (k0 / (TEB15 * TEB15)) + k1
+ElseIf TEB15 < 0.839 Then
+     A = (594.5418 / (TEB15 * TEB15 * 1000000)) + (0 / (TEB15 * 1000))
+Else
+     A = (186.9696 / (TEB15 * TEB15 * 1000000)) + (0.4862 / (TEB15 * 1000))
+End If
+ 
+F = -A * MTEMP * (1 + 0.8 * A * MTEMP)
+VCF = Exp(F)
+VCF = Round(VCF, 4) + 0.00000001
+VCF = Round(VCF, 4)
+MOGOS15 = Round(MOGOS * VCF, 0)
+ 
+End If
+ 
+'Gia ta lipantika ASTM 53 D
+If protok!p_astm = "D" Then
+ 
+MTEMP = MTTHME - 15
+MOGOS = Round(MOGOS, 0)
+MTEMP1 = MTEMP - Int(MTEMP)
+MTEMP2 = Round(MTEMP1 / 0.25, 0)
+MTEMP = Int(MTEMP) + (MTEMP2 * 0.25)
+TEB15 = Round((MEB15 / 2) + 0.0000001, 3)
+TEB15 = TEB15 * 2
+'--> Start of change by A.Bonas@20090317
+'A = 0.0006278 / TEB15
+If TEB15 = 0 Then
+    A = 0
+Else
+    A = 0.0006278 / TEB15
+End If
+'<-- End of change by A.Bonas@20090317
+F = -A * MTEMP * (1 + 0.8 * A * MTEMP)
+VCF = Exp(F)
+VCF = Round(VCF, 4) + 0.00000001
+VCF = Round(VCF, 4)
+MOGOS15 = Round(MOGOS * VCF, 0)
+ 
+End If
+ 
+End Sub
+ 
+ 
+ 
+ 
+ 
+Public Sub Yp_mogos1()
+ 
+Dim MMCRACAP, MDIFF2, MDIFF1  As Double
+ 
+MMCRACAP = Round((MCRACAP - MPCRACAP) / (MCREND - MPCREND), 3)
+MOGOS1 = 0
+MDIFF2 = 0
+If Int(MNHIGH / 1000) > Int(MPCREND / 1000) Then
+   MDIFF2 = MDIFF
+   MDIFF = Int(MNHIGH / 1000) * 1000 - MPCREND
+   MDIFF2 = MDIFF2 - MDIFF
+End If
+ 
+Do While MDIFF <> 0
+    MDIFF1 = Int(MDIFF / 1000)
+    MOGOS1 = MOGOS1 + MDIFF1 * Round(1000 * MMCRACAP, 0)
+    MDIFF1 = MDIFF1 * 1000
+    MDIFF = MDIFF - MDIFF1
+    MDIFF1 = Int(MDIFF / 100)
+    MDIFF1 = MDIFF1 * 100
+    MOGOS1 = MOGOS1 + Round(MDIFF1 * MMCRACAP, 0)
+    MDIFF = MDIFF - MDIFF1
+    MDIFF1 = Int(MDIFF / 10)
+    MDIFF1 = MDIFF1 * 10
+    MOGOS1 = MOGOS1 + Round(MDIFF1 * MMCRACAP, 0)
+    MDIFF = MDIFF - MDIFF1
+    MDIFF1 = MDIFF
+    MOGOS1 = MOGOS1 + Round(MDIFF1 * MMCRACAP, 0)
+    If MDIFF2 > 0 Then
+       MDIFF = MDIFF2
+       MDIFF2 = 0
+    Else
+       MDIFF = 0
+    End If
+ 
+Loop
+ 
+End Sub
+ 
+ 
+ 
+ 
+ 
+Public Sub Yp_mogos()
+Dim ShellFactor_flag As Boolean
+ 
+ShellFactor_flag = DLookup("ShellFactor", "Parameters")
+ 
+L = 0
+MPCREND = 0
+MPCRACAP = 0
+ 
+Do
+    L = L + 1
+   
+    dx_value = "d" & (L) & "x"
+    dy_value = "d" & (L) & "y"
+    'If CurrentProject.AllForms("enimerosi_dex").IsLoaded Then
+    '    MCREND = DLookup(dy_value, "Dex_Stock_kulindr", "[code] = '" & protok!dexameni & "'")
+    '    MCRACAP = DLookup(dx_value, "Dex_Stock_kulindr", "[code] = '" & protok!dexameni & "'")
+    'Else
+    '    MCREND = DLookup(dy_value, "P_kulindr")
+    '    MCRACAP = DLookup(dx_value, "P_kulindr")
+    'End If
+    MCREND = protok(dy_value)
+    MCRACAP = protok(dx_value)
+    If MNHIGH > MCREND Then
+       MDIFF = MCREND - MPCREND
+       MOGOS = MOGOS + (MCRACAP - MPCRACAP)
+       MPCREND = MCREND
+       MPCRACAP = MCRACAP
+    Else
+      If L = 1 Then
+        MDIFF = MNHIGH
+        Yp_mogos1
+        MOGOS = MOGOS + MOGOS1
+      Else
+        dy_diff = "d" & (L - 1) & "y"
+        'If CurrentProject.AllForms("enimerosi_dex").IsLoaded Then
+        '    MCREND1 = DLookup(dy_diff, "Dex_Stock_kulindr", "[code] = '" & protok!dexameni & "'")
+        'Else
+        '    MCREND1 = DLookup(dy_diff, "P_kulindr")
+        'End If
+        MCREND1 = protok(dy_diff)
+        MDIFF = MNHIGH - MCREND1
+        Yp_mogos1
+        MOGOS = MOGOS + MOGOS1
+      End If
+     
+      MOGKP = protok!ogk_kon
+      If ShellFactor_flag = True Then
+        Shell_Correction_Factor                     'A.Bonas@20081201
+      End If
+      MOGY = MOGOS
+      MOGOS = MOGY + MOGKP
+      Exit Do
+    End If
+ 
+Loop Until L = 12
+ 
+End Sub
+ 
+ 
+ 
+ 
+ 
+Public Sub Yp_mogos_Bullets_old()
+Dim ShellFactor_flag As Boolean
+Dim rst_bullets_tbl As Recordset
+ 
+ShellFactor_flag = DLookup("ShellFactor", "Parameters")
+ 
+ 
+Set rst_bullets_tbl = CurrentDb.OpenRecordset("bullets_table")
+ 
+rst_bullets_tbl.MoveFirst
+Do
+    If MNHIGH <= rst_bullets_tbl![height] Then
+        rst_bullets_tbl.MovePrevious
+        Exit Do
+    End If
+    rst_bullets_tbl.MoveNext
+Loop Until rst_bullets_tbl.EOF
+ 
+MOGOS = rst_bullets_tbl![volume] + ((MNHIGH - rst_bullets_tbl![height]) * rst_bullets_tbl![volume_mm])
+ 
+'L = 0
+'MPCREND = 0
+'MPCRACAP = 0
+ 
+'Do
+'    L = L + 1
+   
+'    dx_value = "d" & (L) & "x"
+'    dy_value = "d" & (L) & "y"
+'    If CurrentProject.AllForms("enimerosi_dex").IsLoaded Then
+'        MCREND = DLookup(dy_value, "Dex_Stock_kulindr", "[code] = '" & protok!dexameni & "'")
+'        MCRACAP = DLookup(dx_value, "Dex_Stock_kulindr", "[code] = '" & protok!dexameni & "'")
+'    Else
+'        MCREND = DLookup(dy_value, "P_kulindr")
+'        MCRACAP = DLookup(dx_value, "P_kulindr")
+'    End If
+'    If MNHIGH > MCREND Then
+'       MDIFF = MCREND - MPCREND
+'       MOGOS = MOGOS + (MCRACAP - MPCRACAP)
+'       MPCREND = MCREND
+'       MPCRACAP = MCRACAP
+'    Else
+'      If L = 1 Then
+'        MDIFF = MNHIGH
+'        Yp_mogos1
+'        MOGOS = MOGOS + MOGOS1
+'      Else
+'        dy_diff = "d" & (L - 1) & "y"
+'        If CurrentProject.AllForms("enimerosi_dex").IsLoaded Then
+'            MCREND1 = DLookup(dy_diff, "Dex_Stock_kulindr", "[code] = '" & protok!dexameni & "'")
+'        Else
+'            MCREND1 = DLookup(dy_diff, "P_kulindr")
+'        End If
+'        MDIFF = MNHIGH - MCREND1
+'        Yp_mogos1
+'        MOGOS = MOGOS + MOGOS1
+'      End If
+     
+      MOGKP = protok!ogk_kon
+      If IsNull(MOGKP) Then
+        MOGKP = 0
+      End If
+      If ShellFactor_flag = True Then
+        Shell_Correction_Factor                     'A.Bonas@20081201
+      End If
+      MOGY = MOGOS
+      MOGOS = MOGY + MOGKP
+'      Exit Do
+'    End If
+ 
+'Loop Until L = 12
+ 
+End Sub
+ 
